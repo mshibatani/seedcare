@@ -1,0 +1,17 @@
+[Unit]
+Description=SeedCare Dashboard (Streamlit)
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/app/seedcare
+EnvironmentFile=-/opt/app/seedcare/.env
+ExecStart=/opt/app/seedcare/.venv/bin/streamlit run seedcare/dashboard.py \
+    --server.port 8501 --server.address 0.0.0.0 --server.headless true
+Restart=on-failure
+RestartSec=5
+Environment=PATH=/opt/app/seedcare/.venv/bin:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target
