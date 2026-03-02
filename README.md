@@ -99,4 +99,4 @@ Pi (Raspbian Bullseye) ではシステム Python 3.9 を使用。`--system-site-
 | `seedcare/__main__.py` | `python -m seedcare` エントリポイント |
 
 ## 開発方法
-- Claude 4.6 Opus を使用して開発。
+- Claude Code Opus 4.6 を使用して開発。
