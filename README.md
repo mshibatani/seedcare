@@ -34,7 +34,7 @@ cp .env.example .env
 | `HIGH_THRESHOLD_TEMPERATURE` | 高温アラート閾値 (℃) | `35.0` |
 | `RETENTION_DAYS` | データ保持日数 | `120` |
 
-### 2. Pi へのデプロイ
+### 2. Pi へのデプロイ（リモート開発スクリプトを別途準備。このレポジトリには含まない）
 
 ```bash
 # リポジトリルートから
@@ -85,3 +85,18 @@ Pi (Raspbian Bullseye) ではシステム Python 3.9 を使用。`--system-site-
 ## 既知の問題
 
 - **macOS Safari** でダッシュボードが表示されない（WebSocket 接続エラー）。Chrome または iPhone Safari を使用のこと。詳細: [docs/known-issues.md](docs/known-issues.md)
+
+## ファイル構成
+
+| ファイル | 説明 |
+|----------|------|
+| `seedcare/collector.py` | MQTT デーモン。ESP32 からのデータを受信し1分平均に集約して DB に記録 |
+| `seedcare/config.py` | `.env` から設定を読み込む dataclass |
+| `seedcare/db.py` | SQLite アクセス層（WAL モード対応） |
+| `seedcare/dashboard.py` | Streamlit ダッシュボード。30秒ごとに自動更新 |
+| `seedcare/notifier.py` | 閾値超過・無通信時のメール通知 |
+| `seedcare/purge.py` | 保持期限を超えた古いデータの日次削除 |
+| `seedcare/__main__.py` | `python -m seedcare` エントリポイント |
+
+## 開発方法
+- Claude 4.6 Opus を使用して開発。
