@@ -3,6 +3,7 @@
 import logging
 import time
 from datetime import datetime
+from typing import Dict, Optional
 
 import paho.mqtt.client as mqtt
 
@@ -25,7 +26,7 @@ class MQTTCollector:
         self.last_minute = "Undefined"
         self.last_msg_time: float = 0
         self._last_purge_date: str = ""
-        self._client: mqtt.Client | None = None
+        self._client: Optional[mqtt.Client] = None
 
     def start(self) -> None:
         db.setup(self.config.db_path)
@@ -87,12 +88,12 @@ class MQTTCollector:
 
         logger.info("%s %s-%d = %s", self.current_dt, kind, dev_no, value)
 
-    def _gathering_average(self) -> dict | None:
+    def _gathering_average(self) -> Optional[dict]:
         """10秒サンプルを1分平均に集約する。"""
         if "Undefined" in self.pack:
             return None
 
-        total: dict[str, float] = {}
+        total: Dict[str, float] = {}
         last_dt = ""
         for dt_key in self.pack:
             last_dt = dt_key

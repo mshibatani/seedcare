@@ -3,6 +3,7 @@
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 CREATE_TABLE = """\
 CREATE TABLE IF NOT EXISTS plantGrowerDB(
@@ -57,7 +58,7 @@ def append(db_path: Path, record: dict) -> None:
     con.close()
 
 
-def fetch_range(db_path: Path, since: datetime) -> list[tuple]:
+def fetch_range(db_path: Path, since: datetime) -> List[Tuple]:
     con = _connect(db_path)
     rows = con.execute(
         "SELECT * FROM plantGrowerDB WHERE dateTime >= ? ORDER BY dateTime",
@@ -67,7 +68,7 @@ def fetch_range(db_path: Path, since: datetime) -> list[tuple]:
     return rows
 
 
-def fetch_latest(db_path: Path) -> tuple | None:
+def fetch_latest(db_path: Path) -> Optional[Tuple]:
     con = _connect(db_path)
     row = con.execute(
         "SELECT * FROM plantGrowerDB ORDER BY dateTime DESC LIMIT 1"

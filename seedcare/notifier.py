@@ -12,6 +12,7 @@ import smtplib
 import time
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from typing import Dict, Optional
 
 from seedcare.config import Config
 
@@ -51,7 +52,7 @@ class AlertTracker:
 
     def __init__(self, config: Config):
         self.config = config
-        self._last_sent: dict[str, float] = {}
+        self._last_sent: Dict[str, float] = {}
 
     def _key(self, kind: str, dev_no: int) -> str:
         return f"{kind}-{dev_no}"
@@ -63,7 +64,7 @@ class AlertTracker:
     def _mark_sent(self, key: str) -> None:
         self._last_sent[key] = time.time()
 
-    def check_thresholds(self, record: dict | None) -> None:
+    def check_thresholds(self, record: Optional[dict]) -> None:
         """レコードの値を閾値と比較し、超過時にメール通知する。"""
         if record is None:
             return
