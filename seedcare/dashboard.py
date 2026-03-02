@@ -43,7 +43,10 @@ def load_data(days: int) -> pd.DataFrame:
     return df
 
 
-def make_chart(df: pd.DataFrame, title: str) -> go.Figure:
+def make_chart(df: pd.DataFrame, title: str, days: int) -> go.Figure:
+    now = datetime.now()
+    x_start = now - timedelta(days=days)
+
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     fig.add_trace(
         go.Scatter(x=df["dateTime"], y=df["temperature0"], name="Temp 0", line=dict(color="#EF553B")),
@@ -61,16 +64,24 @@ def make_chart(df: pd.DataFrame, title: str) -> go.Figure:
         go.Scatter(x=df["dateTime"], y=df["moisture1"], name="Moisture 1", line=dict(color="#00CC96", dash="dot")),
         secondary_y=True,
     )
-    fig.update_layout(title=title, hovermode="x unified", height=450)
+    fig.update_layout(
+        title=title,
+        hovermode="x unified",
+        height=450,
+        xaxis=dict(range=[x_start, now]),
+    )
     fig.update_yaxes(title_text="Temperature (\u2103)", secondary_y=False)
     fig.update_yaxes(title_text="Moisture (%)", secondary_y=True)
     return fig
 
 
+# タブをフラグメントの外に置く
+tab_day, tab_week = st.tabs(["1日表示", "1週間表示"])
+
+
 @st.fragment(run_every="30s")
-def live_dashboard():
-    """30秒ごとにこのブロックだけ再実行される。"""
-    # サマリーカード
+def summary_cards():
+    """サマリーカード（30秒ごとに自動更新）。"""
     latest = db.fetch_latest(DB_PATH) if DB_PATH.exists() else None
     if latest:
         cols = st.columns(4)
@@ -86,22 +97,31 @@ def live_dashboard():
         for col, (label, value, unit, icon) in zip(cols, card_order):
             col.metric(f"{label} {icon}".strip(), f"{value:.1f}{unit}")
 
-    # タブ
-    tab_day, tab_week = st.tabs(["1日表示", "1週間表示"])
 
-    with tab_day:
-        df = load_data(1)
-        if df.empty:
-            st.info("直近1日のデータがありません")
-        else:
-            st.plotly_chart(make_chart(df, "過去24時間"), use_container_width=True)
-
-    with tab_week:
-        df = load_data(7)
-        if df.empty:
-            st.info("直近1週間のデータがありません")
-        else:
-            st.plotly_chart(make_chart(df, "過去1週間"), use_container_width=True)
+@st.fragment(run_every="30s")
+def day_chart():
+    """1日グラフ（30秒ごとに自動更新）。"""
+    df = load_data(1)
+    if df.empty:
+        st.info("直近1日のデータがありません")
+    else:
+        st.plotly_chart(make_chart(df, "過去24時間", 1), use_container_width=True)
 
 
-live_dashboard()
+@st.fragment(run_every="30s")
+def week_chart():
+    """1週間グラフ（30秒ごとに自動更新）。"""
+    df = load_data(7)
+    if df.empty:
+        st.info("直近1週間のデータがありません")
+    else:
+        st.plotly_chart(make_chart(df, "過去1週間", 7), use_container_width=True)
+
+
+summary_cards()
+
+with tab_day:
+    day_chart()
+
+with tab_week:
+    week_chart()
