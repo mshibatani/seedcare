@@ -75,14 +75,16 @@ def live_dashboard():
     if latest:
         cols = st.columns(4)
         # latest: (dateTime, temp0, temp1, moisture0, moisture1, relay0, relay1)
+        relay0_icon = "\U0001f525 " if latest[5] == "ON" else ""
+        relay1_icon = "\U0001f525 " if latest[6] == "ON" else ""
         card_order = [
-            ("Temp 0", latest[1], "\u2103"),
-            ("Moisture 0", latest[3], "%"),
-            ("Temp 1", latest[2], "\u2103"),
-            ("Moisture 1", latest[4], "%"),
+            ("Temp 0", latest[1], "\u2103", relay0_icon),
+            ("Moisture 0", latest[3], "%", ""),
+            ("Temp 1", latest[2], "\u2103", relay1_icon),
+            ("Moisture 1", latest[4], "%", ""),
         ]
-        for col, (label, value, unit) in zip(cols, card_order):
-            col.metric(label, f"{value:.1f}{unit}")
+        for col, (label, value, unit, icon) in zip(cols, card_order):
+            col.metric(f"{label} {icon}".strip(), f"{value:.1f}{unit}")
 
     # タブ
     tab_day, tab_week = st.tabs(["1日表示", "1週間表示"])
