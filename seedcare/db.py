@@ -68,6 +68,29 @@ def fetch_range(db_path: Path, since: datetime) -> List[Tuple]:
     return rows
 
 
+def fetch_range_downsampled(
+    db_path: Path, since: datetime, interval_sec: int
+) -> List[Tuple]:
+    """指定間隔で平均化したデータを返す。"""
+    con = _connect(db_path)
+    rows = con.execute(
+        """SELECT
+            datetime(
+                CAST(strftime('%s', dateTime) AS INTEGER) / ? * ?,
+                'unixepoch'
+            ) AS bucket,
+            AVG(temperature0), AVG(temperature1),
+            AVG(moisture0), AVG(moisture1)
+        FROM plantGrowerDB
+        WHERE dateTime >= ?
+        GROUP BY bucket
+        ORDER BY bucket""",
+        [interval_sec, interval_sec, since],
+    ).fetchall()
+    con.close()
+    return rows
+
+
 def fetch_latest(db_path: Path) -> Optional[Tuple]:
     con = _connect(db_path)
     row = con.execute(

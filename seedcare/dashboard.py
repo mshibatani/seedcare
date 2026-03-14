@@ -1,127 +1,70 @@
-"""Streamlit ダッシュボード。
+"""Flask ダッシュボード。
 
 Usage:
-    streamlit run seedcare/dashboard.py
+    python seedcare/dashboard.py
 """
 
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pandas as pd
-import plotly.graph_objects as go
-import streamlit as st
-from plotly.subplots import make_subplots
+from flask import Flask, jsonify, render_template, request
 
 from seedcare import db
+
+app = Flask(__name__)
 
 DB_PATH = Path(os.environ.get("DB_PATH", "data/seedcare.db"))
 db.setup(DB_PATH)
 
-st.set_page_config(page_title="SeedCare Monitor", layout="wide")
-st.title("SeedCare Monitor")
+
+@app.route("/")
+def index():
+    return render_template("dashboard.html")
 
 
-def load_data(days: int) -> pd.DataFrame:
+@app.route("/api/latest")
+def api_latest():
+    if not DB_PATH.exists():
+        return jsonify(None)
+    latest = db.fetch_latest(DB_PATH)
+    if not latest:
+        return jsonify(None)
+    return jsonify({
+        "dateTime": str(latest[0]),
+        "temperature0": latest[1],
+        "temperature1": latest[2],
+        "moisture0": latest[3],
+        "moisture1": latest[4],
+        "relay0": latest[5],
+        "relay1": latest[6],
+    })
+
+
+@app.route("/api/data")
+def api_data():
+    days = request.args.get("days", 1, type=int)
     since = datetime.now() - timedelta(days=days)
-    rows = db.fetch_range(DB_PATH, since)
-    if not rows:
-        return pd.DataFrame()
-    df = pd.DataFrame(
-        rows,
-        columns=[
-            "dateTime",
-            "temperature0",
-            "temperature1",
-            "moisture0",
-            "moisture1",
-            "relay0",
-            "relay1",
-        ],
-    )
-    df["dateTime"] = pd.to_datetime(df["dateTime"])
-    return df
 
-
-def make_chart(df: pd.DataFrame, title: str, days: int) -> go.Figure:
-    now = datetime.now()
-    x_start = now - timedelta(days=days)
-
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
-    fig.add_trace(
-        go.Scatter(x=df["dateTime"], y=df["temperature0"], name="Temp 0", line=dict(color="#EF553B")),
-        secondary_y=False,
-    )
-    fig.add_trace(
-        go.Scatter(x=df["dateTime"], y=df["temperature1"], name="Temp 1", line=dict(color="#FF7F0E")),
-        secondary_y=False,
-    )
-    fig.add_trace(
-        go.Scatter(x=df["dateTime"], y=df["moisture0"], name="Moisture 0", line=dict(color="#636EFA", dash="dot")),
-        secondary_y=True,
-    )
-    fig.add_trace(
-        go.Scatter(x=df["dateTime"], y=df["moisture1"], name="Moisture 1", line=dict(color="#00CC96", dash="dot")),
-        secondary_y=True,
-    )
-    fig.update_layout(
-        title=title,
-        hovermode="x unified",
-        height=450,
-        xaxis=dict(range=[x_start, now]),
-    )
-    fig.update_yaxes(title_text="Temperature (\u2103)", secondary_y=False)
-    fig.update_yaxes(title_text="Moisture (%)", secondary_y=True)
-    return fig
-
-
-# タブをフラグメントの外に置く
-tab_day, tab_week = st.tabs(["1日表示", "1週間表示"])
-
-
-@st.fragment(run_every="30s")
-def summary_cards():
-    """サマリーカード（30秒ごとに自動更新）。"""
-    latest = db.fetch_latest(DB_PATH) if DB_PATH.exists() else None
-    if latest:
-        cols = st.columns(4)
-        # latest: (dateTime, temp0, temp1, moisture0, moisture1, relay0, relay1)
-        relay0_icon = "\U0001f525 " if latest[5] == "ON" else ""
-        relay1_icon = "\U0001f525 " if latest[6] == "ON" else ""
-        card_order = [
-            ("Temp 0", latest[1], "\u2103", relay0_icon),
-            ("Moisture 0", latest[3], "%", ""),
-            ("Temp 1", latest[2], "\u2103", relay1_icon),
-            ("Moisture 1", latest[4], "%", ""),
-        ]
-        for col, (label, value, unit, icon) in zip(cols, card_order):
-            col.metric(f"{label} {icon}".strip(), f"{value:.1f}{unit}")
-
-
-@st.fragment(run_every="30s")
-def day_chart():
-    """1日グラフ（30秒ごとに自動更新）。"""
-    df = load_data(1)
-    if df.empty:
-        st.info("直近1日のデータがありません")
+    if days >= 30:
+        rows = db.fetch_range_downsampled(DB_PATH, since, 900)  # 15min
+    elif days >= 7:
+        rows = db.fetch_range_downsampled(DB_PATH, since, 300)  # 5min
     else:
-        st.plotly_chart(make_chart(df, "過去24時間", 1), use_container_width=True)
+        rows = db.fetch_range(DB_PATH, since)
+
+    result = {"dateTime": [], "temperature0": [], "temperature1": [],
+              "moisture0": [], "moisture1": []}
+
+    for row in rows:
+        result["dateTime"].append(str(row[0]))
+        result["temperature0"].append(row[1])
+        result["temperature1"].append(row[2])
+        result["moisture0"].append(row[3])
+        result["moisture1"].append(row[4])
+
+    return jsonify(result)
 
 
-@st.fragment(run_every="30s")
-def week_chart():
-    """1週間グラフ（30秒ごとに自動更新）。"""
-    df = load_data(7)
-    if df.empty:
-        st.info("直近1週間のデータがありません")
-    else:
-        st.plotly_chart(make_chart(df, "過去1週間", 7), use_container_width=True)
-
-
-summary_cards()
-
-with tab_day:
-    day_chart()
-
-with tab_week:
-    week_chart()
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8501)

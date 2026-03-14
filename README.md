@@ -13,7 +13,7 @@ ESP32 → Mosquitto (Pi:1883) → [collector] → SQLite ← [dashboard] → Bro
 ### 前提
 
 - Raspberry Pi 4B（Raspbian Bullseye）
-- Mosquitto MQTT ブローカーが Pi 上で稼働
+- Mosquitto MQTT ブローカーが Raspberry Pi 上で稼働
 - ESP32 が MQTT でセンサーデータを送信中
 
 ### 1. 設定ファイルの作成

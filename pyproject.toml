@@ -2,13 +2,10 @@
 name = "seedcare"
 version = "0.1.0"
 description = "SeedCare Monitor - ESP32温湿度データ収集・可視化システム"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "paho-mqtt<2.0",
-    "streamlit>=1.30",
-    "streamlit-autorefresh>=1.0",
-    "plotly>=5.18",
-    "pandas>=2.0",
+    "flask>=2.3",
 ]
 
 [build-system]

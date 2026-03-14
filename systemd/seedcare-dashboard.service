@@ -7,11 +7,7 @@ Type=simple
 User=pi
 WorkingDirectory=/opt/app/seedcare
 EnvironmentFile=-/opt/app/seedcare/.env
-ExecStart=/opt/app/seedcare/.venv/bin/streamlit run seedcare/dashboard.py \
-    --server.port 8501 --server.address 0.0.0.0 --server.headless true \
-    --server.enableCORS false --server.enableXsrfProtection false \
-    --server.enableWebsocketCompression false \
-    --browser.serverAddress 0.0.0.0
+ExecStart=/bin/bash -c 'PYTHONPATH=/opt/app/seedcare exec /opt/app/seedcare/.venv/bin/python seedcare/dashboard.py'
 Restart=on-failure
 RestartSec=5
 Environment=PATH=/opt/app/seedcare/.venv/bin:/usr/local/bin:/usr/bin:/bin
