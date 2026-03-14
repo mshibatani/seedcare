@@ -1,6 +1,6 @@
 # SeedCare Monitor
 
-ESP32 の温湿度データを MQTT で収集し、Raspberry Pi 上で記録・可視化するシステム。
+ESP32 の温湿度データを MQTT で収集し、サーバー上で記録・可視化するシステム。
 
 ```
 ESP32 → Mosquitto (Pi:1883) → [collector] → SQLite ← [dashboard] → Browser
@@ -12,9 +12,8 @@ ESP32 → Mosquitto (Pi:1883) → [collector] → SQLite ← [dashboard] → Bro
 
 ### 前提
 
-- Raspberry Pi 4B（Raspbian Bullseye）
-- Mosquitto MQTT ブローカーが Raspberry Pi 上で稼働
-- ESP32 が MQTT でセンサーデータを送信中
+- Mosquitto MQTT ブローカーが上で稼働
+- ESP32 が MQTT でセンサーデータを送信（参考: https://github.com/mshibatani/seedcare-controller/）
 
 ### 1. 設定ファイルの作成
 
