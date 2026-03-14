@@ -10,7 +10,7 @@ class Config:
     # MQTT
     mqtt_broker: str = "127.0.0.1"
     mqtt_port: int = 1883
-    mqtt_topic: str = "SHiBA-Plant01/#"
+    mqtt_topic: str = "plant/#"
 
     # Database
     db_path: Path = field(default_factory=lambda: Path("data/seedcare.db"))
@@ -39,7 +39,7 @@ def load_config() -> Config:
     cfg = Config(
         mqtt_broker=os.environ.get("MQTT_BROKER", "127.0.0.1"),
         mqtt_port=int(os.environ.get("MQTT_PORT", "1883")),
-        mqtt_topic=os.environ.get("MQTT_TOPIC", "SHiBA-Plant01/#"),
+        mqtt_topic=os.environ.get("MQTT_TOPIC", "plant/#"),
         db_path=Path(os.environ.get("DB_PATH", "data/seedcare.db")),
         email_account=os.environ.get("PYTHON_SEND_EMAIL_ACCOUNT", ""),
         email_password=os.environ.get("PYTHON_SEND_EMAIL_PASSWORD", ""),

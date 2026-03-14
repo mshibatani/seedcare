@@ -15,7 +15,7 @@ def config(tmp_path):
     return Config(
         mqtt_broker="127.0.0.1",
         mqtt_port=1883,
-        mqtt_topic="SHiBA-Plant01/#",
+        mqtt_topic="plant/#",
         db_path=tmp_path / "test.db",
         email_account="test@gmail.com",
         email_password="pass",
@@ -65,12 +65,12 @@ class TestGatheringAverage:
 
 class TestOnMessage:
     def test_temperature_message(self, collector):
-        msg = _make_mqtt_msg("SHiBA-Plant01/Temperature/0", "25.5")
+        msg = _make_mqtt_msg("plant/Temperature/0", "25.5")
         collector._on_message(None, None, msg)
         assert collector.pack[collector.current_dt]["Temperature"][0] == 25.5
 
     def test_moisture_message(self, collector):
-        msg = _make_mqtt_msg("SHiBA-Plant01/Moisture/1", "65")
+        msg = _make_mqtt_msg("plant/Moisture/1", "65")
         collector._on_message(None, None, msg)
         assert collector.pack[collector.current_dt]["Moisture"][1] == 65
 
@@ -86,7 +86,7 @@ class TestOnMessage:
             },
         }
         # 分が変わる DateTime を送信
-        msg = _make_mqtt_msg("SHiBA-Plant01/DateTime", "2025/03/01 12:01:10")
+        msg = _make_mqtt_msg("plant/DateTime", "2025/03/01 12:01:10")
         with patch("seedcare.collector.db.append") as mock_append:
             with patch.object(collector.alert, "check_thresholds"):
                 collector._on_message(None, None, msg)
